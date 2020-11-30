@@ -34,28 +34,6 @@ OUTPUT_MDLSTM_QRNN2 = "outputs/out_graz_evalmdlstmqrnn2_25/"
 
 GRAZ_ORIGIN = "/media/DATA/simon/Repos/facadecompletion/data/graz50/graz50_matrix/"
 
-#logger = logging.getLogger(__name__)
-
-#calc TP
-"""
-def calc_tp( prediction, gt, color):
-    #print(prediction.shape == gt.shape)
-    if (prediction.shape == gt.shape) :
-        width = prediction.shape[0]
-        height = prediction.shape[1]
-        #all_pixel = width*height
-        tp = 0.0
-
-        for x in range(width):
-            for y in range(height):
-                if  (gt[x][y] == color).all()  and (prediction[x][y] == color).all():
-                    tp += 1.0
-        return tp
-
-    else:
-        print("ERROR: Prediction and GT not same shape!!!")
-        return -1
-"""
 
 def list_checkpoint_dirs(input_path, template):
     #print("PATH %s" % input_path)
@@ -63,18 +41,12 @@ def list_checkpoint_dirs(input_path, template):
     begins_with='0'
     image_list = []
     file_list = os.listdir(input_path) # Change this PATH to traverse other directories if you want.
-    if file_list != None:
-        pass
-    #print("%s files were found under current folder. " % len(file_list))
-    #print("Please be noted that only files end with '*.jpg' will be load!")
+
     for i in range(len(file_list)):
         current_file_abs_path = input_path+file_list[i]
         if (current_file_abs_path.startswith(template)):
             image_list.append(current_file_abs_path)
     image_list.sort()
-    #print("#####################################")
-    #print(len(image_list))
-    #print("#####################################")
     return image_list
 
 def calc_tp( prediction, gt, threshold):
@@ -160,11 +132,6 @@ def calc_evalvalues( prediction, gt, threshold):
     tn = calc_tn(prediction, gt, threshold)
     fn = calc_fn(prediction, gt, threshold)
     total = prediction.shape[0]*prediction.shape[1]
-    #print("Total Pixel: "+ str(total))
-    #print("TP: "+ str(tp))
-    #print("FP: "+ str(fp))
-    #print("TN: "+ str(tn))
-    #print("FN: "+ str(fn))
 
     if (tp+tn+fp+fn) != total:
         print("ERROR: "+str(total)+" =/= "+str(tp+tn+fp+fn))
@@ -221,11 +188,6 @@ def calc_recall( prediction, gt, color):
     return recall
 
 def calc_IoU(prediction, target):
-    #print(target.shape)
-    #print(prediction.shape)
-    #cv.imshow('image',prediction)
-    #cv.waitKey(0)
-    #cv.destroyAllWindows()
     intersection = np.logical_and(target, prediction)
     union = np.logical_or(target, prediction)
     iou_score = np.sum(intersection) / np.sum(union)
@@ -235,8 +197,6 @@ def calc_IoU(prediction, target):
 def write_detections(filepath,output,groundtruth,input,threshold):
     image_list = list_data(GRAZ_ORIGIN, "_facade.png")
     spatial_list = list_data(GRAZ_ORIGIN, "_spatial.txt")
-
-    #print("Spatial: "+str(spatial_list))
 
     index = match_matrix(groundtruth)
 
@@ -280,8 +240,6 @@ def write_detections(filepath,output,groundtruth,input,threshold):
         # Line thickness of 9 px
         thickness = 2
 
-        # Using cv2.line() method
-        # Draw a diagonal green line with thickness of 9 px
         img = cv.line(img, (x_min,y_min), (x_max,y_min), color, thickness)
         img = cv.line(img, (x_min,y_min), (x_min,y_max), color, thickness)
 
@@ -444,7 +402,6 @@ def eval(model_type='mdmd_lstm', enable_plotting=True, checkpoint_path='checkpoi
         y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
         rnn_out = snake_standard_lstm(input_data=x, rnn_size=hidden_size)
     elif model_type == ModelType.SNAKE_GRID_LSTM:
-        print("???????????????????????????????????????????????????????????????")
         #hidden_size = 256#64#256
         print(model_type)
         y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
@@ -540,20 +497,6 @@ def eval(model_type='mdmd_lstm', enable_plotting=True, checkpoint_path='checkpoi
     else:
         raise Exception('Unknown model type: {}.'.format(model_type))
     #GRADIENT CLIPPING
-    """
-    loss = tf.reduce_mean(tf.square(y - model_out))
-    grad_update = tf.train.AdamOptimizer(learning_rate)#.minimize(loss)
-    gvs = grad_update.compute_gradients(loss)
-    capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in gvs]
-    train_op = grad_update.apply_gradients(capped_gvs)
-    gpu_options = tf.GPUOptions(allow_growth = True)
-
-    loss = tf.reduce_mean(tf.square(y - model_out))
-    grad_update = tf.train.AdamOptimizer(learning_rate).minimize(loss)
-    gpu_options = tf.GPUOptions(allow_growth = True)
-    # Add ops to save and restore all the variables.
-
-    """
     print(model_type)
 
     if not (model_type == ModelType.QRNN or model_type == ModelType.MD_QRNN_COMBI or model_type == ModelType.DQRNN):
@@ -637,11 +580,6 @@ def eval(model_type='mdmd_lstm', enable_plotting=True, checkpoint_path='checkpoi
     avg_iou = 0.0
 
     for i in range(len(all_acc)):
-        #print("###############"+str(i)+"################")
-        #print("all_acc[i]:"+str(all_acc[i]))
-        #print("all_pre[i]:"+str(all_pre[i]))
-        #print("all_recall[i]:"+str(all_recall[i]))
-        #print("all_iou[i]:"+str(all_iou[i]))
         avg_acc += all_acc[i]
         avg_pre += all_pre[i]
         avg_recall += all_recall[i]
@@ -691,11 +629,6 @@ def eval(model_type='mdmd_lstm', enable_plotting=True, checkpoint_path='checkpoi
                 x_name = "x_"+'{:06d}'.format(i)+".png"
                 y_name = "y_"+'{:06d}'.format(i)+".png"
                 z_name = "z_"+'{:06d}'.format(i)+".png"
-                #print("\n")
-                #print(batch_x.shape)
-                #print(mat_out.shape)
-                #print(mat_gt.shape)
-                #print("\n")
                 write_mat_conf(batch_x.squeeze(), x_name, OUTPUT_QRNN)
                 write_mat_conf(mat_out.squeeze(), z_name, OUTPUT_QRNN)
                 write_mat_conf(mat_gt.squeeze(), y_name, OUTPUT_QRNN)
@@ -704,12 +637,6 @@ def eval(model_type='mdmd_lstm', enable_plotting=True, checkpoint_path='checkpoi
                 y_name = "y_"+'{:06d}'.format(i)+".png"
                 z_name = "z_"+'{:06d}'.format(i)+".png"
 
-                #print("\n")
-                #print(batch_x.shape)
-                #print(mat_out.shape)
-                #print(mat_gt.shape)
-                #print("\n")
-
                 write_mat_conf(batch_x.squeeze(), x_name, OUTPUT_GRID)
                 write_mat_conf(mat_out.squeeze(), z_name, OUTPUT_GRID)
                 write_mat_conf(mat_gt.squeeze(), y_name, OUTPUT_GRID)
@@ -717,12 +644,6 @@ def eval(model_type='mdmd_lstm', enable_plotting=True, checkpoint_path='checkpoi
                 x_name = "x_"+'{:06d}'.format(i)+".png"
                 y_name = "y_"+'{:06d}'.format(i)+".png"
                 z_name = "z_"+'{:06d}'.format(i)+".png"
-
-                #print("\n")
-                #print(batch_x.shape)
-                #print(mat_out.shape)
-                #print(mat_gt.shape)
-                #print("\n")
 
                 write_mat_conf(batch_x.squeeze(), x_name, OUTPUT_MDLSTM)
                 write_mat_conf(mat_out.squeeze(), z_name, OUTPUT_MDLSTM)
@@ -733,12 +654,6 @@ def eval(model_type='mdmd_lstm', enable_plotting=True, checkpoint_path='checkpoi
                 z_name = "z_"+'{:06d}'.format(i)+".png"
                 det_name = "det_"+'{:06d}'.format(i)+".png"
 
-                #print("\n")
-                #print(batch_x.shape)
-                #print(mat_out.shape)
-                #print(mat_gt.shape)
-                #print("\n")
-
                 write_mat_conf(batch_x.squeeze(), x_name, OUTPUT_MDMDLSTM)
                 write_mat_conf(mat_out.squeeze(), z_name, OUTPUT_MDMDLSTM)
                 write_mat_conf(mat_gt.squeeze(), y_name, OUTPUT_MDMDLSTM)
@@ -748,12 +663,6 @@ def eval(model_type='mdmd_lstm', enable_plotting=True, checkpoint_path='checkpoi
                 y_name = "y_"+'{:06d}'.format(i)+".png"
                 z_name = "z_"+'{:06d}'.format(i)+".png"
 
-                #print("\n")
-                #print(batch_x.shape)
-                #print(mat_out.shape)
-                #print(mat_gt.shape)
-                #print("\n")
-
                 write_mat_conf(batch_x.squeeze(), x_name, OUTPUT_MDLSTM_QRNN1)
                 write_mat_conf(mat_out.squeeze(), z_name, OUTPUT_MDLSTM_QRNN1)
                 write_mat_conf(mat_gt.squeeze(), y_name, OUTPUT_MDLSTM_QRNN1)
@@ -761,13 +670,7 @@ def eval(model_type='mdmd_lstm', enable_plotting=True, checkpoint_path='checkpoi
                 x_name = "x_"+'{:06d}'.format(i)+".png"
                 y_name = "y_"+'{:06d}'.format(i)+".png"
                 z_name = "z_"+'{:06d}'.format(i)+".png"
-
-                #print("\n")
-                #print(batch_x.shape)
-                #print(mat_out.shape)
-                #print(mat_gt.shape)
-                #print("\n")
-
+                
                 write_mat_conf(batch_x.squeeze(), x_name, OUTPUT_MDLSTM_QRNN2)
                 write_mat_conf(mat_out.squeeze(), z_name, OUTPUT_MDLSTM_QRNN2)
                 write_mat_conf(mat_gt.squeeze(), y_name, OUTPUT_MDLSTM_QRNN2)

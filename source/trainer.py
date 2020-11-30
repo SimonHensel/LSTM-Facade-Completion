@@ -112,21 +112,6 @@ class LossType(Enum):
         except KeyError:
             raise ValueError()
 
-"""
-class SeqType(Enum):
-    SNAKE = "SNAKE"
-    HILBERT = "HILBERT"
-
-    def __str__(self):
-        return self.value
-
-    @staticmethod
-    def from_string(s):
-        try:
-            return LossType[s]
-        except KeyError:
-            raise ValueError()
-"""
 def get_arguments(parser: argparse.ArgumentParser):
     args = None
     try:
@@ -271,13 +256,6 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
         rnn_out = tf.reshape(rnn_out,[batch_size, in_w, in_h, channels])
         print("rnn_out:")
         print(rnn_out)
-        '''
-        with tf.name_scope("QRNN-Classifier"):
-            W = tf.Variable(tf.random_normal([size, size]), name="W")
-            b = tf.Variable(tf.random_normal([size]), name="b")
-            rnn_out = tf.add(tf.matmul(hidden, W), b)
-        #in_size=in_size, size=size, conv_size=conv_size
-        '''
     elif model_type == ModelType.MD_QRNN_COMBI:
         hidden_size = 1250
         print(model_type)
@@ -312,13 +290,6 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
         rnn_out = tf.reshape(rnn_out,[batch_size, in_w, in_h, channels])
         print("rnn_out:")
         print(rnn_out)
-        '''
-        with tf.name_scope("QRNN-Classifier"):
-            W = tf.Variable(tf.random_normal([size, size]), name="W")
-            b = tf.Variable(tf.random_normal([size]), name="b")
-            rnn_out = tf.add(tf.matmul(hidden, W), b)
-        #in_size=in_size, size=size, conv_size=conv_size
-        '''
     else:
         raise Exception('Unknown model type: {}.'.format(model_type))
 
@@ -340,28 +311,7 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
     print("pool_out: "+str(pool_out))
     reshape_out = tf.reshape(pool_out, y.shape)
     print("reshape_out: "+str(reshape_out))
-    #GRADIENT CLIPPING
-    """
-    loss = tf.reduce_mean(tf.square(y - model_out))
-    grad_update = tf.train.AdamOptimizer(learning_rate)#.minimize(loss)
-    gvs = grad_update.compute_gradients(loss)
-    capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in gvs]
-    train_op = grad_update.apply_gradients(capped_gvs)
-    gpu_options = tf.GPUOptions(allow_growth = True)
-    """
-    #print(reshape_out)
-    #print(pool_out)
-    #print(rnn_out)
-    #print(model_out)
-    #print(y)
-    """
-    The new loss should address 3 problems:
-    1.  Prediction dont have sharp borders and tend to "flow away"
-    2.  Objects that are in the input are considered 100% correct and should
-        not be modified by the neural network
-    3.  Predictions are weak, the network should sometimes take more risk and not
-        play it safe.
-    """
+
     print("#########LOSS#CALC############")
     #print(y)
     #print(reshape_out)
@@ -430,17 +380,9 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
             batch_y = np.expand_dims(batch[1], axis=3)
             batch_y_dist1 = np.expand_dims(batch[2], axis=3)
             batch_y_dist2 = np.expand_dims(batch[3], axis=3)
-            #print(batch_x.shape)
-            #print(batch_y.shape)
 
-            #model_preds, tot_loss_value, _ = sess.run([model_out, loss, train_op], feed_dict={x: batch_x, y: batch_y})
             model_preds, tot_loss_value, r_sh_loss, r_g_loss, _ = sess.run([model_out, all_loss, sh_loss, loss, grad_update], feed_dict={x: batch_x, y: batch_y, y_dist1: batch_y_dist1, y_dist2: batch_y_dist2})
 
-
-            # extract the predictions for the second x
-            #relevant_pred_index = get_relevant_prediction_index(batch_y)
-            #true_rel = np.array([batch_y[i, x, y, 0] for (i, (y, x)) in enumerate(relevant_pred_index)])
-            #pred_rel = np.array([model_preds[i, x, y, 0] for (i, (y, x)) in enumerate(relevant_pred_index)])
             relevant_loss = 0.0#np.mean(np.square(true_rel - pred_rel))
         else:
             if model_type == ModelType.MD_SNAKE_GRID_LSTM_C:
@@ -459,15 +401,10 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
             #print(batch_x.shape)
             #print(batch_y.shape)
 
-            #model_preds, tot_loss_value, _ = sess.run([model_out, loss, train_op], feed_dict={x: batch_x, y: batch_y})
             model_preds, tot_loss_value, r_sh_loss, r_g_loss, _ = sess.run([model_out, all_loss, sh_loss, loss, grad_update], feed_dict={x: batch_x, y: batch_y})
 
 
-            # extract the predictions for the second x
-            #relevant_pred_index = get_relevant_prediction_index(batch_y)
-            #true_rel = np.array([batch_y[i, x, y, 0] for (i, (y, x)) in enumerate(relevant_pred_index)])
-            #pred_rel = np.array([model_preds[i, x, y, 0] for (i, (y, x)) in enumerate(relevant_pred_index)])
-            relevant_loss = 0.0#np.mean(np.square(true_rel - pred_rel))
+            relevant_loss = 0.0
 
         values = [str(i).zfill(4) , time() - grad_step_start_time, tot_loss_value, r_sh_loss, r_g_loss]
         format_str = '{0} | time {1:.3f} \nall loss = {2:.3f} | g loss = {3:.3f} |shape loss = {4:.3f} |\n'
@@ -497,10 +434,6 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
                 write_out = sess.run(reshape_out, feed_dict={x: batch_x})[0].squeeze()
                 print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++")
                 print(write_out.shape)
-                #pool_out = tf.layers.max_pooling2d(write_out,(max_pool_h,max_pool_w),8)
-                #print(pool_out.shape)
-                #reshape_out = tf.reshape(pool_out, y.shape)[0]
-                #print(reshape_out.shape)
                 write_coordinates(write_out, batch_x[0].squeeze().shape, z_name)
             else:
                 write_mat(sess.run(model_out, feed_dict={x: batch_x})[0].squeeze(), z_name)
