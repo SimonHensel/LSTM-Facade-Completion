@@ -1,1 +1,0 @@
-nvidia-docker run -it --rm tensorflow/tensorflow:1.12.0-gpu-py3 htop

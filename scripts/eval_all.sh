@@ -1,35 +1,51 @@
-echo "Evaluating MD_LSTM NEW LOSS..."
+reset
+# checkpoint_mdmdlstm checkpoint_mdqrnncombi2  checkpoint_snakegrid checkpoint_mdlstm  checkpoint_mdqrnncombi  checkpoint_qrnn
 
-python3.6 source/evaluate.py --model_type MD_LSTM_DISTANCE \
---checkpoint_path checkpoints/checkpoint_test/model.cpk  --hidden_size 256 \
-| tee evaluation/evaled_mdlstm_newloss.txt
 
-echo "Evaluating MDMD_LSTM NEW LOSS..."
+echo "Evaluating MDMD_LSTM 25..."
+#3125
+python source/evaluate.py --model_type MDMD_LSTM \
+--checkpoint_path checkpoints/checkpoint_mdmdlstm/model.ckpt  --hidden_size 2500 \
+| tee evaluation/evaled_mdmdlstm_25.txt
 
-python3.6 source/evaluate.py --model_type MDMD_LSTM_DISTANCE \
---checkpoint_path checkpoints/checkpoint_test2/model.ckpt  --hidden_size 256 \
-| tee evaluation/evaled_mdmdlstm_newloss.txt
+#echo "Evaluating MD_LSTM 25 ..."
+#3125
+#python source/evaluate.py --model_type MD_LSTM \
+#--checkpoint_path checkpoints/checkpoint_mdlstm/model.ckpt  --hidden_size 5000 \
+#| tee evaluation/evaled_mdlstm25FR.txt
 
-#echo "Evaluating GRID LSTM SNAKE..."
+#echo "Evaluating MDMD_LSTM 25..."
+#3125
+#python source/evaluate.py --model_type MDMD_LSTM \
+#--checkpoint_path checkpoints/checkpoint_mdmdlstm25_2directions/model.ckpt  --hidden_size 3125 \
+#| tee evaluation/evaled_mdmdlstm_25.txt
 
-#python3.6 source/evaluate.py --model_type SNAKE_GRID_LSTM \
-#--checkpoint_path checkpoints/checkpoint_gridsnake --hidden_size 256 \
-#| tee evaluation/evaled_gridsnake.txt
+#echo "Evaluating MD_LSTM 25..."
 
-#echo "Evaluating MD GRID LSTM SNAKE..."
+#python source/evaluate.py --model_type MD_LSTM \
+#--checkpoint_path checkpoints/checkpoint_mdlstm25/model.ckpt  --hidden_size 4096 \
+#| tee evaluation/evaled_mdlstm_25.txt
 
-#python3.6 source/evaluate.py --model_type MD_SNAKE_GRID_LSTM \
-#--checkpoint_path checkpoints/checkpoint_mdgridsnake --hidden_size 128 \
-#| tee evaluation/evaled_mdgridsnake.txt
+#echo "Evaluating GRID LSTM SNAKE 25..."
 
-#echo "Evaluating MD GRID LSTM SNAKE with ghosts..."
+#python source/evaluate.py --model_type SNAKE_GRID_LSTM \
+#--checkpoint_path checkpoints/checkpoint_grid25/model.ckpt --hidden_size 4096 \
+#| tee evaluation/evaled_gridsnake_25.txt
 
-#python3.6 source/evaluate.py --model_type MD_SNAKE_GRID_LSTM \
-#--checkpoint_path checkpoints/checkpoint_mdgridsnake_ghost --hidden_size 256 \
-#| tee evaluation/evaled_mdgridsnake_ghost.txt
+#echo "Evaluating QRNN 25..."
 
-#echo "Evaluating MDMD_LSTM..."
+#python source/evaluate.py --model_type QRNN \
+#--checkpoint_path checkpoints/checkpoint_qrnn/model.ckpt  --hidden_size 2500 \
+#| tee evaluation/evaled_qrnn_25.txt
 
-#python3.6 source/evaluate.py --model_type MDMD_LSTM \
-#--checkpoint_path checkpoints/checkpoint_mdmdlstm  --hidden_size 128 \
-#| tee evaluation/evaled_mdmdlstm.txt
+#echo "Evaluating MD QRNN COMBI 25..."
+
+#python source/evaluate.py --model_type MD_QRNN_COMBI \
+#--checkpoint_path checkpoints/checkpoint_mdqrnncombi/model.ckpt --hidden_size 1250 \
+#| tee evaluation/evaled_mdqrnncombi_25.txt
+
+#echo "Evaluating MD QRNN COMBI2 25..."
+
+#python source/evaluate.py --model_type MD_QRNN_COMBI2 \
+#--checkpoint_path checkpoints/checkpoint_mdqrnncombi2/model.ckpt --hidden_size 1250 \
+#| tee evaluation/evaled_mdqrnncombi2_25.txt
