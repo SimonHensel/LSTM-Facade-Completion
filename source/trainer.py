@@ -166,9 +166,9 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
         print(model_type)
         y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
         rnn_out = snake_grid_lstm(input_data=x, rnn_size=hidden_size)
-        print("\n")
-        print(rnn_out)
-        print("\n")
+        #print("\n")
+        #print(rnn_out)
+        #print("\n")
     elif model_type == ModelType.HILBERT_GRID_LSTM:
         hidden_size = 256
         print(model_type)
@@ -179,65 +179,6 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
         print(model_type)
         y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
         rnn_out = md_snake_grid_lstm(input_data=x, rnn_size=hidden_size)
-    elif model_type == ModelType.MD_HILBERT_GRID_LSTM:
-        hidden_size = 256
-        print(model_type)
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        rnn_out = md_hilbert_grid_lstm(input_data=x, rnn_size=hidden_size)
-    elif model_type == ModelType.MD_SNAKE_GRID_LSTM_C:
-        print(model_type)
-        learning_rate = 0.01
-        batch_size = 1
-        in_h = 64#32#128
-        in_w = 64#32#128
-        #out_h = 16#32#128
-        out_len = 64#32#128
-        max_pool_h = int(math.sqrt(in_h))
-        max_pool_w = int(math.sqrt(in_w))
-        channels = 1
-        hidden_size = 256#128#64#256
-        y = tf.placeholder(tf.float32, [batch_size, out_len, channels])
-        rnn_out = md_snake_grid_lstm(input_data=x, rnn_size=hidden_size)
-
-    elif model_type == ModelType.RESNET:
-        print(model_type)
-        learning_rate = 0.01
-        batch_size = 6
-        #in_h = 64#32#128
-        input_size = 8*64#32#128
-        #out_h = 16#32#128
-        out_len = 64#32#128
-        max_pool_h = int(math.sqrt(in_h))
-        max_pool_w = int(math.sqrt(in_w))
-        channels = 1
-        hidden_size = 256#128#64#256
-        x = tf.placeholder(tf.float32, [batch_size, input_size, input_size, channels])
-        y = tf.placeholder(tf.float32, [batch_size, out_len, out_len, channels])
-        rnn_out = resnet(
-            input_data=x,
-            resnet_size=hidden_size,
-            input_size=input_size,
-            training=True
-        )
-    elif model_type == ModelType.HILBERT_GRID_LSTM:
-        hidden_size = 256
-        print(model_type)
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        rnn_out = hilbert_grid_lstm(input_data=x, rnn_size=hidden_size)
-    elif model_type == ModelType.MD_LSTM_DISTANCE:
-        hidden_size = 256
-        print(model_type)
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        y_dist1 = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        y_dist2 = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        rnn_out, _ = multi_dimensional_rnn_while_loop(input_data=x, rnn_size=hidden_size,sh=[1, 1])
-    elif model_type == ModelType.MDMD_LSTM_DISTANCE:
-        hidden_size = 256
-        print(model_type)
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        y_dist1 = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        y_dist2 = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        rnn_out, _ = multi_directional_md_rnn_while_loop(input_data=x, rnn_size=hidden_size,sh=[1, 1])
     elif model_type == ModelType.QRNN:
         hidden_size = 2500
         y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
@@ -253,42 +194,9 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
         print(x_reshaped)
         rnn_out = qrnn.forward(x_reshaped)
         rnn_out = tf.reshape(rnn_out,[batch_size, in_w, in_h, channels])
-        print("rnn_out:")
-        print(rnn_out)
-    elif model_type == ModelType.MD_QRNN_COMBI:
-        hidden_size = 1250
-        print(model_type)
-        size = in_h
-        in_size = channels
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        logger.info('Using Multi Dimensional LSTM.')
-        rnn_out = md_qrnn_combi(input_data=x, rnn_size=hidden_size, size=size, in_size=in_size, batch_size=batch_size)
-    elif model_type == ModelType.MD_QRNN_COMBI2:
-        hidden_size = 1250
-        print(model_type)
-        size = in_h
-        in_size = channels
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        logger.info('Using Multi Dimensional LSTM.')
-        rnn_out = md_qrnn_combi2(input_data=x, rnn_size=hidden_size, size=size, in_size=in_size, batch_size=batch_size)
-    elif model_type == ModelType.DQRNN:
-        hidden_size = 1250
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        logger.info('Using DQRNN.')
-        #size = in_h
-        in_size = in_h
-        conv_size = hidden_size
-        qrnn = DQRNN(b_size=batch_size,in_size=1, x_size=in_size, y_size=in_size, conv_size=conv_size)
-        #qrnn = QRNN(in_size=word_size, size=size, conv_size=3)
-        #x_reshaped = tf.squeeze(tf.reshape(x,[batch_size, in_w*in_h, channels]))
-        x_reshaped = x#tf.reshape(x,[batch_size, in_w*in_h, channels])
-        #x_reshaped = tf.squeeze(x_reshaped)
-        print(x_reshaped)
-        rnn_out = qrnn.forward(x_reshaped)
-        print("qrnn.forward: "+str(rnn_out)+"\n") #shape=(25, 16, 625)
-        rnn_out = tf.reshape(rnn_out,[batch_size, in_w, in_h, channels])
-        print("rnn_out:")
-        print(rnn_out)
+        #print("rnn_out:")
+        #print(rnn_out)
+
     else:
         raise Exception('Unknown model type: {}.'.format(model_type))
 
@@ -307,47 +215,21 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
     else:
         pool_out = model_out
 
-    print("pool_out: "+str(pool_out))
+    #print("pool_out: "+str(pool_out))
     reshape_out = tf.reshape(pool_out, y.shape)
-    print("reshape_out: "+str(reshape_out))
+    #print("reshape_out: "+str(reshape_out))
 
-    print("#########LOSS#CALC############")
+    #print("#########LOSS#CALC############")
     #print(y)
     #print(reshape_out)
-    print(loss_type)
+    #print(loss_type)
 
-    if loss_type == LossType.DEFAULT and (model_type != ModelType.MD_LSTM_DISTANCE or model_type == ModelType.MDMD_LSTM_DISTANCE):
-        print("USING DEFAULT LOSS...")
-        sh_loss = tf.constant(0.0)
-        all_loss = tf.reduce_mean(tf.square(y - reshape_out))
-        loss = all_loss
-    elif loss_type == LossType.SHAPE_COMBI:
-        print("USING SHAPE_COMBI LOSS...")
-        loss = tf.reduce_mean(tf.square(y - reshape_out))
-        sh_loss = shape_loss_batch(reshape_out,y, debug=False)
-        #print(loss)
-        #print(sh_loss)
-        all_loss = tf.add(loss,sh_loss)
-    elif loss_type == LossType.SHAPE_ONLY:
-        print("USING SHAPE_ONLY LOSS...")
-        loss = tf.constant(0.0)
-        all_loss = shape_loss_batch(reshape_out,y, debug=False)
-        sh_loss = all_loss
-    elif loss_type == LossType.DEFAULT and (model_type == ModelType.MD_LSTM_DISTANCE or model_type == ModelType.MDMD_LSTM_DISTANCE):
-        print("USING BCE DISTANCE LOSS...")
-        sh_loss = tf.constant(0.0)
 
-        all_loss = distbce_loss_batch(reshape_out,y, y_dist1, y_dist2, logits,debug=False)#tf.losses.log_loss(y,reshape_out)#distbce_loss_batch(reshape_out,y, y_dist1, y_dist2, logits,debug=False)
-        #all_loss = tf.reduce_mean(all_loss)
-        loss = all_loss
+    #print("USING DEFAULT LOSS...")
+    loss = tf.reduce_mean(tf.square(y - reshape_out))
 
-    print("Hier Fehler")
-    """
-    Hier Fehler
-    Tensor("truediv_16:0", shape=(2, 64, 64), dtype=float32)
-    """
-    print(all_loss)
-    grad_update = tf.train.AdamOptimizer(learning_rate).minimize(all_loss)
+
+    grad_update = tf.train.AdamOptimizer(learning_rate).minimize(loss)
     gpu_options = tf.GPUOptions(allow_growth = True)
     # Add ops to save and restore all the variables.
     sess = tf.Session(config=tf.ConfigProto(log_device_placement=False,gpu_options=gpu_options))
@@ -379,13 +261,13 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
         #print(batch_x.shape)
         #print(batch_y.shape)
 
-        model_preds, tot_loss_value, r_sh_loss, r_g_loss, _ = sess.run([model_out, all_loss, sh_loss, loss, grad_update], feed_dict={x: batch_x, y: batch_y})
+        model_preds, tot_loss_value, _ = sess.run([model_out, loss, grad_update], feed_dict={x: batch_x, y: batch_y})
 
 
         relevant_loss = 0.0
 
-        values = [str(i).zfill(4) , time() - grad_step_start_time, tot_loss_value, r_sh_loss, r_g_loss]
-        format_str = '{0} | time {1:.3f} \nall loss = {2:.3f} | g loss = {3:.3f} |shape loss = {4:.3f} |\n'
+        values = [str(i).zfill(4) , time() - grad_step_start_time, tot_loss_value]
+        format_str = '{0} | time {1:.3f} \nloss = {2:.3f}'
         if math.isnan(tot_loss_value):
             print("ERROR: NAN in Loss!")
             exit()
@@ -402,7 +284,7 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
             x_name = "x_"+'{:06d}'.format(i)+".png"
             y_name = "y_"+'{:06d}'.format(i)+".png"
             z_name = "z_"+'{:06d}'.format(i)+".png"
-            print("Shape batch: "+str(batch_x[0].shape))
+            #print("Shape batch: "+str(batch_x[0].shape))
             #print(batch_x[0])
             write_mat(batch_x[0].squeeze(), x_name)
 
@@ -410,8 +292,8 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
             if model_type == ModelType.MD_SNAKE_GRID_LSTM_C:
                 write_coordinates(batch_y[0].squeeze(), batch_x[0].squeeze().shape , y_name)
                 write_out = sess.run(reshape_out, feed_dict={x: batch_x})[0].squeeze()
-                print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-                print(write_out.shape)
+                #print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+                #print(write_out.shape)
                 write_coordinates(write_out, batch_x[0].squeeze().shape, z_name)
             else:
                 write_mat(sess.run(model_out, feed_dict={x: batch_x})[0].squeeze(), z_name)

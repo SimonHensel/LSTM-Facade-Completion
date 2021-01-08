@@ -97,8 +97,8 @@ def parse_datafile(file_to_read):
     for l in range(len(lines)):
         tmp_list = re.findall("\d+\.\d+", lines[l])
         tmp_f_list = [float(i) for i in tmp_list] 
-        if not tmp_f_list[c] == 0.0:
-            matrix[l][c] = tmp_f_list[c]
+        #if not tmp_f_list[c] == 0.0:
+        #    matrix[l][c] = tmp_f_list[c]
 
     return matrix
 
@@ -117,7 +117,7 @@ def read_random_matrix():
     data_list = list_data(PATH_DATA)
     coordinate_list = list_coordinate(PATH_DATA)
 
-    print(len(data_list))
+    #print(len(data_list))
 
     rand_number = np.random.randint(low=0, high=len(coordinate_list)-1)
     matrix = parse_datafile(data_list[rand_number])
@@ -410,71 +410,6 @@ def read_coordinates(iter):
 
     return np.array(coordinate_array)
 
-
-
-
-def next_batch_c(bs):
-    x = []
-    y = []
-    y_tmp = []
-    x_tmp = []
-    for i in range(bs):
-        random_matrix, random_coordinates, _ = read_random_matrix()
-        y_tmp.append(random_coordinates)
-        x_tmp.append(zero_pad_in(random_matrix))
-
-    x_matrix, erased_objects = random_erase_percentage(x_tmp,DIFICULTY_PERCENTAGE)
-    x_tmp = np.array(x_matrix)
-
-    y = np.array(erased_objects)
-    x = np.array(x_tmp)
-
-    t = get_relevant_prediction_index(y)
-
-    if np.any(np.isin(x,0.0)) or np.any(np.isin(y,0.0)):
-        print("ERROR: Zero found!")
-        exit()
-
-    return x, y, t
-
-def next_batch_d(bs):
-    x = []
-    y = []
-    y_dist1 = []
-    y_dist2 = []
-    dist1_array = []
-    dist2_array = []
-    y_tmp = []
-    for i in range(bs):
-        random_matrix, dist1, dist2 = read_random_matrix_with_distance()
-        y_tmp.append(random_matrix)
-        dist1_array.append(dist1)
-        dist2_array.append(dist2)
-
-    x_matrix, _ = random_erase_percentage(y_tmp,DIFICULTY_PERCENTAGE)
-    x_array = np.array(x_matrix)
-    dist1_array = np.array(dist1_array)
-    dist2_array = np.array(dist2_array)
-
-    y_array = np.array(y_tmp)
-
-    for i in range(bs):
-        x.append(zero_pad_in(x_array[i]))
-        y_dist1.append(zero_pad_in(dist1_array[i]))
-        y_dist2.append(zero_pad_in(dist2_array[i]))
-        y.append(zero_pad_in(y_array[i]))
-
-    t = get_relevant_prediction_index(y)
-    x = np.array(x)
-    y = np.array(y)
-    y_dist1 = np.array(y_dist1)
-    y_dist2 = np.array(y_dist2)
-    if np.any(np.isin(x,0.0)) or np.any(np.isin(y,0.0)):
-        print("ERROR: Zero found!")
-        exit()
-
-    return x, y, y_dist1, y_dist2, t
-
 def random_rotate(matrix):
     rand_num = random.randint(0,3)
     for i in range(rand_num):
@@ -520,13 +455,12 @@ def next_batch(bs):
         x.append(normalize_cluster(zero_pad_in(x_array[i])))
         y[i] = zero_pad_in(y_array[i])
 
-    t = get_relevant_prediction_index(y)
     x = np.array(x)
     y = np.array(y)
     if np.any(np.isin(x,0.0)) or np.any(np.isin(y,0.0)):
         print("ERROR: Zero found!")
         exit()
-    return x, y, t
+    return x, y
 """
 def compress(batches, numbers):
     #Compresses the Matrices according to the compression files
@@ -861,9 +795,9 @@ def vert_clustering(matrix):
     first_clustering, _ = matrix_dbscan(matrix,1,1)
     matrix2 = np.zeros(matrix.shape)
 
-    print("########FIRST CLUSTERING############")
-    print(first_clustering)
-    print("####################################")
+    #print("########FIRST CLUSTERING############")
+    #print(first_clustering)
+    #print("####################################")
 
     for c in range(len(first_clustering)):
         cluster = first_clustering[c]
