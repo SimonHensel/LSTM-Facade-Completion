@@ -5,8 +5,6 @@ from tensorflow.contrib.rnn.python.ops.core_rnn_cell import _linear
 from tensorflow.python.ops.rnn import dynamic_rnn
 from tensorflow.contrib import grid_rnn
 import tensorflow.contrib.slim as slim
-from resnet import DeepLabResNetModel
-from to_hilbert import to_hilbert
 from tf_qrnn import QRNN
 
 def calc_custom_loss(pred, gt):

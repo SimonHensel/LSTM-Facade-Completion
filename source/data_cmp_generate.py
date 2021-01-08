@@ -6,8 +6,8 @@ import cv2 as cv
 from pathlib import Path
 
 
-#PATH_DATA = "data/tests_cluster/"
-PATH_DATA = "data/graz50/graz50_matrix/"
+PATH_DATA = "data/tests_cluster/"
+#PATH_DATA = "data/graz50/graz50_matrix/"
 PATH_DISTANCES = "data/Distances/"
 PATH_COMPRESSION_INFO = "data/compress_information/"
 #PATH_DATA = "/tmp/data/tests_cluster/"
@@ -96,9 +96,9 @@ def parse_datafile(file_to_read):
 
     for l in range(len(lines)):
         tmp_list = re.findall("\d+\.\d+", lines[l])
-        tmp_f_list = [float(i) for i in tmp_list]
-            if not tmp_f_list[c] == 0.0:
-                matrix[l][c] = tmp_f_list[c]
+        tmp_f_list = [float(i) for i in tmp_list] 
+        if not tmp_f_list[c] == 0.0:
+            matrix[l][c] = tmp_f_list[c]
 
     return matrix
 
@@ -116,6 +116,8 @@ def zero_pad_in(matrix):
 def read_random_matrix():
     data_list = list_data(PATH_DATA)
     coordinate_list = list_coordinate(PATH_DATA)
+
+    print(len(data_list))
 
     rand_number = np.random.randint(low=0, high=len(coordinate_list)-1)
     matrix = parse_datafile(data_list[rand_number])
@@ -974,12 +976,6 @@ def normalize_cluster(matrix):
                 new_matrix[y][x] = float(np.where(mapping==(int(new_matrix[y][x])))[0])
 
     return new_matrix
-
-
-
-
-
-
 
 def visualise_clusters(matrix, clusters):
     import matplotlib.pyplot as plt

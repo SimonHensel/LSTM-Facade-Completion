@@ -14,14 +14,13 @@ import numpy as np
 import tensorflow.contrib.slim as slim
 from enum import Enum
 from tf_qrnn import QRNN
-from tf_2dqrnn import DQRNN
 from pathlib import Path
 
-from data_cmp_generate import interpolate, next_batch, next_comp_batch, next_batch_c,next_batch_d , write_mat, write_coordinates, get_relevant_prediction_index
+from data_cmp_generate import interpolate, next_batch, write_mat, write_coordinates
 #from generate_low_res_facade import next_batch, write_mat, get_relevant_prediction_index
 
 from md_lstm import *
-from own_loss_test import shape_loss_batch, distbce_loss_batch
+#from own_loss_test import shape_loss_batch, distbce_loss_batch
 from mdmd_lstm import multi_directional_md_rnn_while_loop
 
 logger = logging.getLogger(__name__)
@@ -369,42 +368,21 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
 
     steps = 20000+1
     for i in range(steps):
-        if model_type == ModelType.MD_LSTM_DISTANCE or model_type == ModelType.MDMD_LSTM_DISTANCE:
-            batch = next_batch_d(batch_size)
+        batch = next_batch(batch_size)
 
-            grad_step_start_time = time()
-            batch_x = np.expand_dims(batch[0], axis=3)
-            if model_type == ModelType.RESNET:
-                batch_x = prep_batch_resnet(batch_x)
-                batch_x = np.expand_dims(batch_x, axis=3)
-            batch_y = np.expand_dims(batch[1], axis=3)
-            batch_y_dist1 = np.expand_dims(batch[2], axis=3)
-            batch_y_dist2 = np.expand_dims(batch[3], axis=3)
+        grad_step_start_time = time()
+        batch_x = np.expand_dims(batch[0], axis=3)
+        if model_type == ModelType.RESNET:
+            batch_x = prep_batch_resnet(batch_x)
+            batch_x = np.expand_dims(batch_x, axis=3)
+        batch_y = np.expand_dims(batch[1], axis=3)
+        #print(batch_x.shape)
+        #print(batch_y.shape)
 
-            model_preds, tot_loss_value, r_sh_loss, r_g_loss, _ = sess.run([model_out, all_loss, sh_loss, loss, grad_update], feed_dict={x: batch_x, y: batch_y, y_dist1: batch_y_dist1, y_dist2: batch_y_dist2})
-
-            relevant_loss = 0.0#np.mean(np.square(true_rel - pred_rel))
-        else:
-            if model_type == ModelType.MD_SNAKE_GRID_LSTM_C:
-                batch = next_batch_c(batch_size)
-            else:
-                #batch = next_batch(batch_size)
-                #print("Next COMPRESSED BATCH")
-                batch = next_batch(batch_size)
-
-            grad_step_start_time = time()
-            batch_x = np.expand_dims(batch[0], axis=3)
-            if model_type == ModelType.RESNET:
-                batch_x = prep_batch_resnet(batch_x)
-                batch_x = np.expand_dims(batch_x, axis=3)
-            batch_y = np.expand_dims(batch[1], axis=3)
-            #print(batch_x.shape)
-            #print(batch_y.shape)
-
-            model_preds, tot_loss_value, r_sh_loss, r_g_loss, _ = sess.run([model_out, all_loss, sh_loss, loss, grad_update], feed_dict={x: batch_x, y: batch_y})
+        model_preds, tot_loss_value, r_sh_loss, r_g_loss, _ = sess.run([model_out, all_loss, sh_loss, loss, grad_update], feed_dict={x: batch_x, y: batch_y})
 
 
-            relevant_loss = 0.0
+        relevant_loss = 0.0
 
         values = [str(i).zfill(4) , time() - grad_step_start_time, tot_loss_value, r_sh_loss, r_g_loss]
         format_str = '{0} | time {1:.3f} \nall loss = {2:.3f} | g loss = {3:.3f} |shape loss = {4:.3f} |\n'
