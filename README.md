@@ -1,7 +1,7 @@
 LSTM Facade Completion
 ======================
 
-Implementation of the LSTM networks for facade completion described in the paper (will be added after proceedings are published)
+Implementation of the LSTM networks for facade completion described in the paper (will be added after proceedings are published).
 View with care.
 
 Usage
