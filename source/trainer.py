@@ -21,7 +21,7 @@ from data_cmp_generate import interpolate, next_batch, write_mat, write_coordina
 
 from md_lstm import *
 #from own_loss_test import shape_loss_batch, distbce_loss_batch
-from mdmd_lstm import multi_directional_md_rnn_while_loop
+from rmd_lstm import rotated_md_rnn_while_loop
 
 logger = logging.getLogger(__name__)
 
@@ -69,22 +69,13 @@ class FileLogger(object):
 
 
 class ModelType(Enum):
-    MDMD_LSTM = 'MDMD_LSTM'
+    RMD_LSTM = 'RMD_LSTM'
     MD_LSTM = 'MD_LSTM'
     MD_LSTM_DISTANCE = 'MD_LSTM_DISTANCE'
-    MDMD_LSTM_DISTANCE = 'MDMD_LSTM_DISTANCE'
     HORIZONTAL_SD_LSTM = 'HORIZONTAL_SD_LSTM'
     SNAKE_SD_LSTM = 'SNAKE_SD_LSTM'
-    SNAKE_GRID_LSTM = 'SNAKE_GRID_LSTM'
-    HILBERT_GRID_LSTM = 'HILBERT_GRID_LSTM'
-    MD_HILBERT_GRID_LSTM = 'MD_HILBERT_GRID_LSTM'
-    MD_SNAKE_GRID_LSTM = 'MD_SNAKE_GRID_LSTM'
-    MD_SNAKE_GRID_LSTM_C = 'MD_SNAKE_GRID_LSTM_C'
-    RESNET = 'RESNET'
     QRNN = 'QRNN'
-    MD_QRNN_COMBI = 'MD_QRNN_COMBI'
-    MD_QRNN_COMBI2 = 'MD_QRNN_COMBI2'
-    DQRNN = 'DQRNN'
+
 
     def __str__(self):
         return self.value
@@ -98,8 +89,6 @@ class ModelType(Enum):
 
 class LossType(Enum):
     DEFAULT = "DEFAULT"
-    SHAPE_COMBI = "SHAPE_COMBI"
-    SHAPE_ONLY = "SHAPE_ONLY"
 
     def __str__(self):
         return self.value
@@ -144,12 +133,12 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
         y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
         logger.info('Using Multi Dimensional LSTM.')
         rnn_out, _ = multi_dimensional_rnn_while_loop(rnn_size=hidden_size, input_data=x, sh=[1, 1])
-    elif model_type == ModelType.MDMD_LSTM:
+    elif model_type == ModelType.RMD_LSTM:
         hidden_size = 1250 #2500 for P6000
         print(model_type)
         y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
         logger.info('Using Multi Dimensional LSTM.')
-        rnn_out, _ = multi_directional_md_rnn_while_loop(rnn_size=hidden_size, input_data=x, sh=[1, 1])
+        rnn_out, _ = rotated_md_rnn_while_loop(rnn_size=hidden_size, input_data=x, sh=[1, 1])
     elif model_type == ModelType.HORIZONTAL_SD_LSTM:
         hidden_size = 256
         print(model_type)
@@ -161,24 +150,6 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
         print(model_type)
         y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
         rnn_out = snake_standard_lstm(input_data=x, rnn_size=hidden_size)
-    elif model_type == ModelType.SNAKE_GRID_LSTM:
-        hidden_size = 2500
-        print(model_type)
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        rnn_out = snake_grid_lstm(input_data=x, rnn_size=hidden_size)
-        #print("\n")
-        #print(rnn_out)
-        #print("\n")
-    elif model_type == ModelType.HILBERT_GRID_LSTM:
-        hidden_size = 256
-        print(model_type)
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        rnn_out = hilbert_grid_lstm(input_data=x, rnn_size=hidden_size)
-    elif model_type == ModelType.MD_SNAKE_GRID_LSTM:
-        hidden_size = 256
-        print(model_type)
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        rnn_out = md_snake_grid_lstm(input_data=x, rnn_size=hidden_size)
     elif model_type == ModelType.QRNN:
         hidden_size = 2500
         y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
@@ -202,7 +173,7 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
 
     #print(y)
     logits = rnn_out
-    if not (model_type == ModelType.QRNN or model_type == ModelType.MD_QRNN_COMBI or model_type == ModelType.DQRNN):
+    if not (model_type == ModelType.QRNN):
         model_out = slim.fully_connected(inputs=rnn_out,
                                      num_outputs=1,
                                      activation_fn=tf.nn.sigmoid)
@@ -210,22 +181,10 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
         model_out = rnn_out
 
 
-    if model_type == ModelType.MD_SNAKE_GRID_LSTM_C:
-        pool_out = tf.layers.max_pooling2d(model_out,(max_pool_h,max_pool_w),8)
-    else:
-        pool_out = model_out
+    pool_out = model_out
 
-    #print("pool_out: "+str(pool_out))
     reshape_out = tf.reshape(pool_out, y.shape)
-    #print("reshape_out: "+str(reshape_out))
 
-    #print("#########LOSS#CALC############")
-    #print(y)
-    #print(reshape_out)
-    #print(loss_type)
-
-
-    #print("USING DEFAULT LOSS...")
     loss = tf.reduce_mean(tf.square(y - reshape_out))
 
 
@@ -254,9 +213,6 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
 
         grad_step_start_time = time()
         batch_x = np.expand_dims(batch[0], axis=3)
-        if model_type == ModelType.RESNET:
-            batch_x = prep_batch_resnet(batch_x)
-            batch_x = np.expand_dims(batch_x, axis=3)
         batch_y = np.expand_dims(batch[1], axis=3)
         #print(batch_x.shape)
         #print(batch_y.shape)
@@ -288,16 +244,8 @@ def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/m
             #print(batch_x[0])
             write_mat(batch_x[0].squeeze(), x_name)
 
-
-            if model_type == ModelType.MD_SNAKE_GRID_LSTM_C:
-                write_coordinates(batch_y[0].squeeze(), batch_x[0].squeeze().shape , y_name)
-                write_out = sess.run(reshape_out, feed_dict={x: batch_x})[0].squeeze()
-                #print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-                #print(write_out.shape)
-                write_coordinates(write_out, batch_x[0].squeeze().shape, z_name)
-            else:
-                write_mat(sess.run(model_out, feed_dict={x: batch_x})[0].squeeze(), z_name)
-                write_mat(batch_y[0].squeeze(), y_name)
+            write_mat(sess.run(model_out, feed_dict={x: batch_x})[0].squeeze(), z_name)
+            write_mat(batch_y[0].squeeze(), y_name)
 
 
 

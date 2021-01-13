@@ -4,7 +4,7 @@ reset
 
 echo "Evaluating MDMD_LSTM 25..."
 #3125
-python source/evaluate.py --model_type MDMD_LSTM \
+python source/evaluate.py --model_type RMD_LSTM \
 --checkpoint_path checkpoints/checkpoint_mdmdlstm/model.ckpt  --hidden_size 2500 \
 | tee evaluation/evaled_mdmdlstm_25.txt
 

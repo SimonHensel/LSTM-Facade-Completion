@@ -1,9 +1,8 @@
 LSTM Facade Completion
 ======================
 
-Implementation of the LSTM networks for facade completion described in the paper PLACEHOLDER
-
-This repository is still under cleanup. View with care.
+Implementation of the LSTM networks for facade completion described in the paper (will be added after proceedings are published)
+View with care.
 
 Usage
 ============
@@ -32,7 +31,8 @@ Scripts and their functions:
 * *train.sh* - Sarts training in shell.
 * *eval_all.sh* - Shell for multiple evaluations (uncomment wanted evaluations). 
 
-For training a GPU with 24GB memory is recommendet. We used a Nvidia P6000 for the results presented in the paper.
+For training the RMD LSTM a GPU with 24GB memory and the hidden_size set to 2500 is recommendet. We used a Nvidia P6000 for the results presented in the paper.
+Other tests were performed on a Geforce 1080Ti with 11 GB Memory and the hidden_size set to 1250.
 
 Execute scripts from the main directory.
 For example:

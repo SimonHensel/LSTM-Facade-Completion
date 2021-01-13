@@ -13,26 +13,22 @@ from enum import Enum
 import cv2 as cv
 
 from tf_qrnn import QRNN
-from data_cmp_generate import get_evaldata, write_mat, write_mat_conf, get_relevant_prediction_index
+from data_cmp_generate import get_evaldata, write_mat, write_mat_conf
 #from generate_low_res_facade import next_batch, write_mat, get_relevant_prediction_index
 
 from md_lstm import *
-from own_loss_test import shape_loss_batch, distbce_loss_batch
-from mdmd_lstm import multi_directional_md_rnn_while_loop
+from rmd_lstm import rotated_md_rnn_while_loop
 from match_img import list_data, match_matrix
 
 THRESHOLD = 0.2
 #PATH_TEMPLATE = "/media/DATA/simon/mdlstm_modified/tensorflow-multi-dimensional-lstm/"
 BEGINS_WITH = "checkpoint"
 
-OUTPUT_GRID = "outputs/out_graz_evalgrid25/"
 OUTPUT_QRNN = "outputs/out_graz_evalqrnn25/"
 OUTPUT_MDLSTM = "outputs/out_graz_evalmdlstm25/"
-OUTPUT_MDMDLSTM = "outputs/out_graz_evalmdmdlstm25/"
-OUTPUT_MDLSTM_QRNN1 = "outputs/out_graz_evalmdlstmqrnn1_25/"
-OUTPUT_MDLSTM_QRNN2 = "outputs/out_graz_evalmdlstmqrnn2_25/"
+OUTPUT_RMDLSTM = "outputs/out_graz_evalmdmdlstm25/"
 
-GRAZ_ORIGIN = "/media/DATA/simon/Repos/facadecompletion/data/graz50/graz50_matrix/"
+GRAZ_ORIGIN = "data/graz50/graz50_matrix/"
 
 
 def list_checkpoint_dirs(input_path, template):
@@ -329,22 +325,12 @@ class FileLogger(object):
 
 
 class ModelType(Enum):
-    MDMD_LSTM = 'MDMD_LSTM'
+    RMD_LSTM = 'RMD_LSTM'
     MD_LSTM = 'MD_LSTM'
     MD_LSTM_DISTANCE = 'MD_LSTM_DISTANCE'
-    MDMD_LSTM_DISTANCE = 'MDMD_LSTM_DISTANCE'
     HORIZONTAL_SD_LSTM = 'HORIZONTAL_SD_LSTM'
     SNAKE_SD_LSTM = 'SNAKE_SD_LSTM'
-    SNAKE_GRID_LSTM = 'SNAKE_GRID_LSTM'
-    HILBERT_GRID_LSTM = 'HILBERT_GRID_LSTM'
-    MD_HILBERT_GRID_LSTM = 'MD_HILBERT_GRID_LSTM'
-    MD_SNAKE_GRID_LSTM = 'MD_SNAKE_GRID_LSTM'
-    MD_SNAKE_GRID_LSTM_C = 'MD_SNAKE_GRID_LSTM_C'
-    RESNET = 'RESNET'
     QRNN = 'QRNN'
-    DQRNN = 'DQRNN'
-    MD_QRNN_COMBI = 'MD_QRNN_COMBI'
-    MD_QRNN_COMBI2 = 'MD_QRNN_COMBI2'
 
     def __str__(self):
         return self.value
@@ -367,7 +353,7 @@ def get_arguments(parser: argparse.ArgumentParser):
     return args
 
 
-def eval(model_type='mdmd_lstm', enable_plotting=True, checkpoint_path='checkpoint', hidden_size=128):
+def eval(model_type='RMD_LSTM', enable_plotting=True, checkpoint_path='checkpoint', hidden_size=128):
     learning_rate = 0.01
     batch_size = 1
     in_h = 25#64#32#128
@@ -386,77 +372,12 @@ def eval(model_type='mdmd_lstm', enable_plotting=True, checkpoint_path='checkpoi
         y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
         #logger.info('Using Multi Dimensional LSTM.')
         rnn_out, _ = multi_dimensional_rnn_while_loop(rnn_size=hidden_size, input_data=x, sh=[1, 1])
-    elif model_type == ModelType.MDMD_LSTM:
+    elif model_type == ModelType.RMD_LSTM:
         #hidden_size = 128#64#256
         print(model_type)
         y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
         #logger.info('Using Multi Dimensional LSTM.')
-        rnn_out, _ = multi_directional_md_rnn_while_loop(rnn_size=hidden_size, input_data=x, sh=[1, 1])
-    elif model_type == ModelType.HORIZONTAL_SD_LSTM:
-        print(model_type)
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        #logger.info('Using Standard LSTM.')
-        rnn_out = horizontal_standard_lstm(input_data=x, rnn_size=hidden_size)
-    elif model_type == ModelType.SNAKE_SD_LSTM:
-        print(model_type)
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        rnn_out = snake_standard_lstm(input_data=x, rnn_size=hidden_size)
-    elif model_type == ModelType.SNAKE_GRID_LSTM:
-        #hidden_size = 256#64#256
-        print(model_type)
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        rnn_out = snake_grid_lstm(input_data=x, rnn_size=hidden_size)
-    elif model_type == ModelType.MD_SNAKE_GRID_LSTM:
-        #hidden_size = 256#64#256
-        print(model_type)
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        rnn_out = md_snake_grid_lstm(input_data=x, rnn_size=hidden_size)
-    elif model_type == ModelType.MD_SNAKE_GRID_LSTM_C:
-        print(model_type)
-
-        learning_rate = 0.01
-        batch_size = 16
-        in_h = 64#32#128
-        in_w = 64#32#128
-        #out_h = 16#32#128
-        out_len = 64#32#128
-        max_pool_h = int(math.sqrt(in_h))
-        max_pool_w = int(math.sqrt(in_w))
-        channels = 1
-        #hidden_size = 256#128#64#256
-        y = tf.placeholder(tf.float32, [batch_size, out_len, channels])
-        rnn_out = md_snake_grid_lstm(input_data=x, rnn_size=hidden_size)
-    elif model_type == ModelType.RESNET:
-        print(model_type)
-        learning_rate = 0.01
-        batch_size = 6
-        #in_h = 64#32#128
-        input_size = 8*64#32#128
-        #out_h = 16#32#128
-        out_len = 64#32#128
-        max_pool_h = int(math.sqrt(in_h))
-        max_pool_w = int(math.sqrt(in_w))
-        channels = 1
-        #hidden_size = 256#128#64#256
-        x = tf.placeholder(tf.float32, [batch_size, input_size, input_size, channels])
-        y = tf.placeholder(tf.float32, [batch_size, out_len, out_len, channels])
-        rnn_out = resnet(
-            input_data=x,
-            resnet_size=hidden_size,
-            input_size=input_size,
-            training=True
-        )
-    elif model_type == ModelType.MD_LSTM_DISTANCE:
-        print(model_type)
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        #logger.info('Using Multi Dimensional LSTM.')
-        rnn_out, _ = multi_dimensional_rnn_while_loop(rnn_size=hidden_size, input_data=x, sh=[1, 1])
-    elif model_type == ModelType.MDMD_LSTM_DISTANCE:
-        print(model_type)
-        y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        #y_dist1 = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        #y_dist2 = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
-        rnn_out, _ = multi_directional_md_rnn_while_loop(input_data=x, rnn_size=hidden_size,sh=[1, 1])
+        rnn_out, _ = rotated_md_rnn_while_loop(rnn_size=hidden_size, input_data=x, sh=[1, 1])
     elif model_type == ModelType.QRNN:
         y = tf.placeholder(tf.float32, [batch_size, out_h, out_w, channels])
         #logger.info('Using QRNN.')
@@ -499,7 +420,7 @@ def eval(model_type='mdmd_lstm', enable_plotting=True, checkpoint_path='checkpoi
     #GRADIENT CLIPPING
     print(model_type)
 
-    if not (model_type == ModelType.QRNN or model_type == ModelType.MD_QRNN_COMBI or model_type == ModelType.DQRNN):
+    if not (model_type == ModelType.QRNN):
         print("SOLLTE NICHT SEIN")
         model_out = slim.fully_connected(inputs=rnn_out,
                                      num_outputs=1,
@@ -632,14 +553,6 @@ def eval(model_type='mdmd_lstm', enable_plotting=True, checkpoint_path='checkpoi
                 write_mat_conf(batch_x.squeeze(), x_name, OUTPUT_QRNN)
                 write_mat_conf(mat_out.squeeze(), z_name, OUTPUT_QRNN)
                 write_mat_conf(mat_gt.squeeze(), y_name, OUTPUT_QRNN)
-            elif model_type == ModelType.SNAKE_GRID_LSTM:
-                x_name = "x_"+'{:06d}'.format(i)+".png"
-                y_name = "y_"+'{:06d}'.format(i)+".png"
-                z_name = "z_"+'{:06d}'.format(i)+".png"
-
-                write_mat_conf(batch_x.squeeze(), x_name, OUTPUT_GRID)
-                write_mat_conf(mat_out.squeeze(), z_name, OUTPUT_GRID)
-                write_mat_conf(mat_gt.squeeze(), y_name, OUTPUT_GRID)
             elif model_type == ModelType.MD_LSTM:
                 x_name = "x_"+'{:06d}'.format(i)+".png"
                 y_name = "y_"+'{:06d}'.format(i)+".png"
@@ -648,32 +561,16 @@ def eval(model_type='mdmd_lstm', enable_plotting=True, checkpoint_path='checkpoi
                 write_mat_conf(batch_x.squeeze(), x_name, OUTPUT_MDLSTM)
                 write_mat_conf(mat_out.squeeze(), z_name, OUTPUT_MDLSTM)
                 write_mat_conf(mat_gt.squeeze(), y_name, OUTPUT_MDLSTM)
-            elif model_type == ModelType.MDMD_LSTM:
+            elif model_type == ModelType.RMD_LSTM:
                 x_name = "x_"+'{:06d}'.format(i)+".png"
                 y_name = "y_"+'{:06d}'.format(i)+".png"
                 z_name = "z_"+'{:06d}'.format(i)+".png"
                 det_name = "det_"+'{:06d}'.format(i)+".png"
 
-                write_mat_conf(batch_x.squeeze(), x_name, OUTPUT_MDMDLSTM)
-                write_mat_conf(mat_out.squeeze(), z_name, OUTPUT_MDMDLSTM)
-                write_mat_conf(mat_gt.squeeze(), y_name, OUTPUT_MDMDLSTM)
-                write_detections(OUTPUT_MDMDLSTM+det_name,mat_out.squeeze(),mat_gt.squeeze(), batch_x.squeeze(), 0.5)
-            elif model_type == ModelType.MD_QRNN_COMBI:
-                x_name = "x_"+'{:06d}'.format(i)+".png"
-                y_name = "y_"+'{:06d}'.format(i)+".png"
-                z_name = "z_"+'{:06d}'.format(i)+".png"
-
-                write_mat_conf(batch_x.squeeze(), x_name, OUTPUT_MDLSTM_QRNN1)
-                write_mat_conf(mat_out.squeeze(), z_name, OUTPUT_MDLSTM_QRNN1)
-                write_mat_conf(mat_gt.squeeze(), y_name, OUTPUT_MDLSTM_QRNN1)
-            elif model_type == ModelType.MD_QRNN_COMBI2:
-                x_name = "x_"+'{:06d}'.format(i)+".png"
-                y_name = "y_"+'{:06d}'.format(i)+".png"
-                z_name = "z_"+'{:06d}'.format(i)+".png"
-                
-                write_mat_conf(batch_x.squeeze(), x_name, OUTPUT_MDLSTM_QRNN2)
-                write_mat_conf(mat_out.squeeze(), z_name, OUTPUT_MDLSTM_QRNN2)
-                write_mat_conf(mat_gt.squeeze(), y_name, OUTPUT_MDLSTM_QRNN2)
+                write_mat_conf(batch_x.squeeze(), x_name, OUTPUT_RMDLSTM)
+                write_mat_conf(mat_out.squeeze(), z_name, OUTPUT_RMDLSTM)
+                write_mat_conf(mat_gt.squeeze(), y_name, OUTPUT_RMDLSTM)
+                write_detections(OUTPUT_RMDLSTM+det_name,mat_out.squeeze(),mat_gt.squeeze(), batch_x.squeeze(), 0.5)
             else:
                 pass
         #model_preds, tot_loss_value, _ = sess.run([model_out, loss, grad_update], feed_dict={x: batch_x, y: batch_y}
@@ -756,5 +653,5 @@ def main():
 
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"]="0"
+    #os.environ["CUDA_VISIBLE_DEVICES"]="0"
     main()

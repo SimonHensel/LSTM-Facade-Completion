@@ -56,13 +56,10 @@ class MultiDimensionalLSTMCell(RNNCell):
         """
         with tf.variable_scope(scope or type(self).__name__):
             c1, c2, h1, h2 = state
-
-            # change bias argument to False since LN will add bias via shift
             concat = _linear([inputs, h1, h2], 5 * self._num_units, False)
 
             i, j, f1, f2, o = tf.split(value=concat, num_or_size_splits=5, axis=1)
 
-            # add layer normalization to each gate
             i = ln(i, scope='i/')
             j = ln(j, scope='j/')
             f1 = ln(f1, scope='f1/')
@@ -73,7 +70,6 @@ class MultiDimensionalLSTMCell(RNNCell):
                      c2 * tf.nn.sigmoid(f2 + self._forget_bias) + tf.nn.sigmoid(i) *
                      self._activation(j))
 
-            # add layer_normalization in calculation of new hidden state
             new_h = self._activation(ln(new_c, scope='new_h/')) * tf.nn.sigmoid(o)
             new_state = LSTMStateTuple(new_c, new_h)
 
@@ -253,110 +249,6 @@ def snake_standard_lstm(input_data, rnn_size):
                              inputs=new_input_data,
                              dtype=tf.float32)
     rnn_out = tf.reshape(rnn_out, (b, h, w, rnn_size))
-    return rnn_out
-
-
-def snake_grid_lstm(input_data, rnn_size,scope="snake_rnn1"):
-    with tf.variable_scope(scope):
-        # input is (b, h, w, c)
-        additional_cell_args = {}
-        b, h, w, c = input_data.get_shape().as_list()
-        cell_fn = grid_rnn.Grid2LSTMCell
-        additional_cell_args.update({'use_peepholes': True, 'forget_bias': 1.0,
-                                     'state_is_tuple': False, 'output_is_tuple': False})
-        cell = cell_fn(rnn_size, **additional_cell_args)
-        cell = rnn_cell.MultiRNNCell([cell] * 2)
-        # transpose = swap h and w.
-        new_input_data = tf.reshape(input_data, (b, w * h, c))  # snake.
-        rnn_out, _ = dynamic_rnn(cell,
-                                 inputs=new_input_data,
-                                 dtype=tf.float32)
-        rnn_out = tf.reshape(rnn_out, (b, h, w, rnn_size))
-        return rnn_out
-
-
-
-def hilbert_grid_lstm(input_data, rnn_size,scope="snake_rnn1"):
-    with tf.variable_scope(scope):
-        # input is (b, h, w, c)
-        additional_cell_args = {}
-        b, h, w, c = input_data.get_shape().as_list()
-        cell_fn = grid_rnn.Grid2LSTMCell
-        additional_cell_args.update({'use_peepholes': True, 'forget_bias': 1.0,
-                                     'state_is_tuple': False, 'output_is_tuple': False})
-        cell = cell_fn(rnn_size, **additional_cell_args)
-        # transpose = swap h and w.
-        new_input_data = to_hilbert(input_data, b, h, w, c)#tf.reshape(input_data, (b, w * h, c))  # snake.
-        print("new_input_data shape: "+str(new_input_data.shape))
-        rnn_out, _ = dynamic_rnn(cell,
-                                 inputs=new_input_data,
-                                 dtype=tf.float32)
-        rnn_out = tf.reshape(rnn_out, (b, h, w, rnn_size))
-        return rnn_out
-
-def md_hilbert_grid_lstm(input_data, rnn_size):
-    """
-    Fragen:
-    shape input_data A:input (batch_size, x, y, channels)
-    tensorflow rotation input daten
-    """
-    #1. Direction
-    #print("1.")
-    #print(input_data.shape)
-    out1 = hilbert_grid_lstm(input_data, rnn_size, scope="hilbert_rnn1")
-
-    #2. Direction
-    #print("2.")
-
-    #print(new_input_data.shape)
-    """
-    input_data_2 = slim.fully_connected(inputs=new_input_data,
-                                     num_outputs=1,
-                                     activation_fn=tf.nn.sigmoid)
-    """
-    #for i in range(new_input_data)
-    input_data = tf.transpose(input_data,perm=[0, 2, 1, 3])
-    input_data = tf.reverse(input_data,[2])#np.flipud(input_data_2)
-    #print(input_data_2.shape)
-    out2 = hilbert_grid_lstm(input_data, rnn_size, scope="hilbert_rnn2")
-
-    #3. Direction
-    #print("3.")
-    #print(new_input_data.shape)
-    """
-    input_data_3 = slim.fully_connected(inputs=new_input_data,
-                                     num_outputs=1,
-                                     activation_fn=tf.nn.sigmoid)
-    """
-    input_data = tf.transpose(input_data,perm=[0, 2, 1, 3])
-    input_data = tf.reverse(input_data,[2])#np.flipud(input_data_3)
-    #print(input_data_3.shape)
-    out3 = hilbert_grid_lstm(input_data, rnn_size, scope="hilbert_rnn3")
-
-    #4. Direction
-    #print("4.")
-    #print(new_input_data.shape)
-    """
-    input_data_4 = slim.fully_connected(inputs=new_input_data,
-                                     num_outputs=1,
-                                     activation_fn=tf.nn.sigmoid)
-    """
-    input_data = tf.transpose(input_data,perm=[0, 2, 1, 3])
-    input_data = tf.reverse(input_data,[2])#np.flipud(input_data_4)
-    #print(input_data_3.shape)
-    out4 = hilbert_grid_lstm(input_data, rnn_size, scope="hilbert_rnn4")
-    #prepare output
-
-    #print(output.shape)
-    #output = tf.transpose(output,perm=[0, 2, 1, 3])
-    #print(output.shape)
-    #output = tf.reverse(output,[2])#np.flipud(input_data_4)
-    #print(output.shape)
-    output = out1
-    output = tf.math.maximum(output,out2)
-    output = tf.math.maximum(output,out3)
-    rnn_out = tf.math.maximum(output,out4)
-
     return rnn_out
 
 def md_snake_grid_lstm(input_data, rnn_size):

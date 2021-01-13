@@ -6,7 +6,7 @@ import cv2 as cv
 from pathlib import Path
 
 
-PATH_DATA = "data/tests_cluster/"
+PATH_DATA = "data/cmp_cluster/"
 #PATH_DATA = "data/graz50/graz50_matrix/"
 PATH_DISTANCES = "data/Distances/"
 PATH_COMPRESSION_INFO = "data/compress_information/"
