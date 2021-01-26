@@ -1,9 +1,3 @@
-#import os
-#os.system("pip install --upgrade pip")
-#os.system("apt-get update")
-#os.system("apt-get install -y libsm6 libxext6 libxrender-dev")
-#os.system("pip install numpy opencv-python hilbertcurve")
-
 from time import time
 import os
 import math
@@ -24,13 +18,6 @@ from md_lstm import *
 from rmd_lstm import rotated_md_rnn_while_loop
 
 logger = logging.getLogger(__name__)
-
-def prep_batch_resnet(input_data): # shape (16,512,512,1)
-    out = []
-    for i in range(input_data.shape[0]):
-        out.append(interpolate(input_data[i],512))
-
-    return np.array(out)
 
 
 def get_script_arguments():
@@ -108,9 +95,6 @@ def get_arguments(parser: argparse.ArgumentParser):
         parser.print_help()
         exit(1)
     return args
-
-
-
 
 def run(model_type='md_lstm',enable_plotting=True, checkpoint_path="checkpoint/model.ckpt", loss_type='DEFAULT'):
     #run(args.model_type, args.enable_plotting, args.checkpoint_path, args.loss_type)
@@ -256,5 +240,5 @@ def main():
 
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"]="0"
+    os.environ["CUDA_VISIBLE_DEVICES"]="0" #DEPENDING ON YOUR SYSTEM
     main()

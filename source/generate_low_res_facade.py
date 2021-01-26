@@ -4,8 +4,6 @@ import re
 #from scipy import interpolate
 import cv2 as cv
 
-
-
 """
 
 IDEE: cluster objetcs and apply mdlstm only to the clusters.

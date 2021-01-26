@@ -9,7 +9,6 @@ Usage
 Used with the following libraries and versions
 * Python 3.5.2 
 * h5py                2.8.0
-* hilbertcurve        1.0.3
 * kiwisolver          1.0.1
 * matplotlib          3.0.1
 * numpy               1.15.4
