@@ -11,10 +11,10 @@ can have any size we want.
 '''
 #################################################################
 
-PATH_BASEDATASET = "/media/DATA/simon/mdlstm_modified/tensorflow-multi-dimensional-lstm/data/graz50/graz50_facade_dataset/"
+PATH_BASEDATASET = "data/graz50/graz50_facade_dataset/"
 IMAGESETS_SEG_DIR = "labels_used/"
 
-PATH_RNN_DATASET = "/media/DATA/simon/mdlstm_modified/tensorflow-multi-dimensional-lstm/data/graz50/"
+PATH_RNN_DATASET = "data/graz50/"
 RNN_TEST_DIR = "graz50_matrix/"
 COMP_INFO_DIR = "compress_information/"
 
