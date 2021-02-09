@@ -5,8 +5,9 @@ import re
 import cv2 as cv
 
 """
+WARNING:
+ONLY FOR TESTING AND DEBBUGING
 
-IDEE: cluster objetcs and apply mdlstm only to the clusters.
 
 ____________
 |          |
@@ -45,9 +46,9 @@ def random_short_diagonal_matrix(h, w):
     return m
 '''
 
-PATH_DATA = "/media/DATA/simon/mdlstm_modified/tensorflow-multi-dimensional-lstm/data/tests/"
-#PATH_DATA = "/home/simon/Dropbox/Arbeit/P6000/mdlstm_modified/tensorflow-multi-dimensional-lstm/data/tests/"
-PATH_OUTPUT = "/media/DATA/simon/mdlstm_modified/tensorflow-multi-dimensional-lstm/out/"
+PATH_DATA = "data/tests/"
+#PATH_DATA = "data/tests/"
+PATH_OUTPUT = "out/"
 
 ZERO_PADDING_SIZE = 32#128#512
 MAX_DIFICULTY = 8

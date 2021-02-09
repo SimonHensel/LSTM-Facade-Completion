@@ -2,9 +2,7 @@ import numpy as np
 import os
 import re
 
-TEST_TXT_PATH = "/home/simon/Arbeit/mdlstm_modified/tensorflow-multi-dimensional-lstm/results/eval_graz_25/y_000000.txt"
-
-#ORIGIN_PATH = "/home/simon/Arbeit/mdlstm_modified/tensorflow-multi-dimensional-lstm/data/graz50/graz50_matrix/" #HOME
+TEST_TXT_PATH = "results/eval_graz_25/y_000000.txt"
 ORIGIN_PATH = "data/graz50/graz50_matrix/"
 
 ZERO_PADDING_SIZE = 25
