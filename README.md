@@ -48,11 +48,6 @@ Main options are:
  * MDMD_LSTM
  * QRNN
 
-Checkpoints
-===========
-
-Checkpoints can be downloaded at [google drive](https://drive.google.com/file/d/1Hbg1I2JHbfP0HlLyXMHSZYnl_xpwwOl1/view?usp=sharing)
-
 Data Used
 =========
 
